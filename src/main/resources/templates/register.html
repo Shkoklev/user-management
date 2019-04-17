@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <title>Register</title>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center mt-4">Registration Page</h1>
+        <form class="mt-3 pt-5" th:action="@{/register}"  method="POST" enctype="utf8">
+            <div class="form-group">
+                <label for="input-email">Email address</label>
+                <input type="email" class="form-control" id="input-email" placeholder="Enter email">
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label for="input-first-name">First name</label>
+                        <input type="text" class="form-control" id="input-first-name" placeholder="Enter first name">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label for="input-last-name">Last name</label>
+                        <input type="text" class="form-control" id="input-last-name" placeholder="Enter last name">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label for="input-password">Password</label>
+                        <input type="password" class="form-control" id="input-password" placeholder="Enter password">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label for="input-password-repeat">Repeat password</label>
+                        <input type="password" class="form-control" id="input-password-repeat" placeholder="Repeat password">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label for="input-birth-date">Birth date</label>
+                        <input type="date" class="form-control" id="input-birth-date">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <label for="input-gender">Gender</label>
+                    <select id="input-gender" class="form-control">
+                        <option value="" disabled="disabled" selected>Choose gender...</option>
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-2 offset-5">
+                     <button type="submit" class="btn btn-block btn-primary center-block">Register</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>
