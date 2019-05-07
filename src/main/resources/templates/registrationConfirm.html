@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+          integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
+          crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <title>RegistrationConfirm</title>
+</head>
+<body>
+<div class="container">
+    <h2>Enter the code from the email to active your account</h2>
+    <form th:action="@{/registrationConfirm}" method="post">
+        <div class="form-group">
+            <div th:if="${param.error}" class="alert alert-danger">
+                Invalid activation code
+            </div>
+            <input type="text" name="token" class="form-control" id="input-activation-code" placeholder="Enter activation code">
+        </div>
+        <button type="submit" class="btn btn-block btn-success">Activate your account</button>
+    </form>
+</div>
+</body>
+</html>

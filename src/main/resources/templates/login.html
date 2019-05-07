@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+          integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
+          crossorigin="anonymous">
+    <title>Login</title>
+</head>
+<body>
+<div class="container">
+    <h3>Login</h3><hr>
+    <form th:action="@{/login}" method="post">
+        <fieldset>
+            <div th:if="${param.error}" class="alert alert-danger">
+                Invalid username and password.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success">
+                You have been logged out.
+            </div>
+            <div class="row">
+                <div class="form-group col-6">
+                    <label for="email">Email address</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
+                </div>
+                <div class="form-group col-6">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password">
+                </div>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="gridCheck" name="remember-me">
+                <label class="form-check-label" for="gridCheck">
+                    Remember me
+                </label>
+            </div><br>
+            <button class="btn btn-block btn-success" type="submit">Login</button><br>
+
+            <a href="/login/facebook">Connect with Facebook</a><br>
+            <a href="/login/github">Connect with GitHub</a><br>
+
+            <p>Don't have an account? <a href="/register">Register</a></p>
+            <p>Forgot password? <a href="/password-reset">Reset password</a></p>
+        </fieldset>
+    </form>
+</div>
+</body>
+</html>
+© 2019 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
