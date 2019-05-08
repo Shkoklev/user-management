@@ -3,6 +3,7 @@ package com.eimt.usermanagement.ports.api;
 import com.eimt.usermanagement.model.User;
 import com.eimt.usermanagement.model.dto.UserDto;
 import com.eimt.usermanagement.model.event.OnRegistrationCompleteEvent;
+import com.eimt.usermanagement.model.exception.DuplicateUserException;
 import com.eimt.usermanagement.service.UserService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Controller;
@@ -39,6 +40,11 @@ public class UserController {
         return "register";
     }
 
+    @GetMapping(value = "login")
+    public String login() {
+        return "login";
+    }
+
     @PostMapping(value = "register")
     public String registerUser(
             @ModelAttribute("user") @Valid UserDto userDto,
@@ -55,12 +61,18 @@ public class UserController {
             model.addAttribute("errorPasswordsDoNotMatch", "Passwords do not match");
             return "register";
         }
-        User user = this.userService.createUser(userDto);
 
         try {
+            User user = this.userService.createUser(userDto);
             String appUrl = request.getContextPath();
             eventPublisher.publishEvent(new OnRegistrationCompleteEvent(user,request.getLocale(),appUrl));
-        } catch (Exception me) {
+        }
+
+        catch (DuplicateUserException exception) {
+            return "redirect:/register?duplicateUser";
+        }
+
+        catch (Exception me) {
             me.printStackTrace();
         }
 
@@ -78,7 +90,7 @@ public class UserController {
             this.userService.verifyUser(token); 
             return new ModelAndView("redirect:/login");
         } catch (RuntimeException e) {
-            return new ModelAndView("redirect:/activation?error");
+            return new ModelAndView("redirect:/registrationConfirm?error");
         }
     }
 

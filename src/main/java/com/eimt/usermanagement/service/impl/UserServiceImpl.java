@@ -11,32 +11,41 @@ import com.eimt.usermanagement.repository.UserRepository;
 import com.eimt.usermanagement.repository.VerificationTokenRepository;
 import com.eimt.usermanagement.service.UserService;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Calendar;
-import java.util.Date;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, UserDetailsService {
 
-    UserRepository userRepository;
-    VerificationTokenRepository verificationTokenRepository;
+    private final UserRepository userRepository;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository) {
+    public UserServiceImpl(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User createUser(UserDto user) {
-        userRepository.findByEmail(user.getEmail()).ifPresent(it -> { throw new DuplicateUserException(); });
+
+        userRepository.findByEmail(user.getEmail()).ifPresent(it -> { throw new DuplicateUserException(
+                "User with an email: " + user.getEmail() + " already exists !"
+        ); });
+
         final LocalDateTime registrationDate = LocalDateTime.now();
         final Role role = Role.USER;
 
         User newUser = new User(
                 user.getEmail(),
-                user.getPassword(),
+                passwordEncoder.encode(user.getPassword()),
                 user.getFirstName(),
                 user.getLastName(),
                 user.getGender(),
@@ -56,14 +65,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void verifyUser(String activationCode) {
         VerificationToken token = this.verificationTokenRepository.findByToken(activationCode)
-                .orElseThrow(InvalidTokenException::new);
+                .orElseThrow(() -> new InvalidTokenException("this code " + activationCode + " is invalid !"));
         User u = this.userRepository.findByEmail(token.getUser().getEmail())
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException("User with email " + token.getUser().getEmail() + " does not exist !"));
         u.activate();
         this.verificationTokenRepository.delete(token);
     }
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 17 * * * *")
     public void deleteExpiredTokensAndUsers(){
         Calendar cal = Calendar.getInstance();
         verificationTokenRepository.findAll()
@@ -98,5 +107,11 @@ public class UserServiceImpl implements UserService {
 
     public void changeLastName(String email, String newLastName) {
 
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(email));
     }
 }
