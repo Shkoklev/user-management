@@ -1,5 +1,7 @@
 package com.eimt.usermanagement.model;
 
+import net.bytebuddy.utility.RandomString;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -23,7 +25,8 @@ public class VerificationToken {
 
     private Date expiryDate;
 
-    public VerificationToken() {}
+    public VerificationToken() {
+    }
 
     public VerificationToken(User user) {
         this.user = user;

@@ -5,6 +5,10 @@
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
           integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
           crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+
+
     <title>Login</title>
 
     <style>
@@ -18,25 +22,36 @@
 <h1 class="text-center mt-4">Login Page</h1>
 <div class="row">
     <div style="float: none; display: block; margin: 0 auto">
-        <form class="mt-3 pt-5" name='f' action="login" method='POST'>
+        <form class="mt-3 pt-5" th:action="@{/login}" method="post">
+            <div th:if="${param.error}" class="alert alert-danger">
+                Wrong email or password !
+            </div>
             <table>
                 <tr>
                     <td>Email:</td>
-                    <td><input type='text' name='username' value=''></td>
+                    <td><input type='email' id="email" name='email' placeholder="Enter email"></td>
                 </tr>
                 <tr>
                     <td>Password:</td>
-                    <td><input type='password' name='password' /></td>
+                    <td><input type='password' id="password" name='password' placeholder="Enter password"/></td>
                 </tr>
                 <tr>
                     <td>Remember Me:</td>
-                    <td><input type="checkbox" name="remember-me" /></td>
+                    <td>
+                        <input type="checkbox" name="remember-me"/>
+                        <a class="pl-5 ml-4" href="forgotPassword">Forgot password ?</a>
+                    </td>
                 </tr>
                 <tr>
                     <td><a class="btn btn-primary" href="register">Register</a></td>
-                    <td class="float-right"><input class="btn btn-primary" name="submit" type="submit" value="Log in" /></td>
+                    <td class="float-right">
+                        <button class="btn btn-primary" type="submit">Login</button>
+                        <br></td>
                 </tr>
             </table>
+            <hr>
+            <a href="/login/facebook" class="p-1"><i class="fa fa-facebook text-primary mr-1"></i>Connect with Facebook</a>
+            <a href="/login/github" class="p-1 text-dark"><i class="fa fa-github text-dark mr-1"></i>Connect with GitHub</a><br>
         </form>
     </div>
 </div>

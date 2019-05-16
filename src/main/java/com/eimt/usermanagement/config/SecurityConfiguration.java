@@ -1,113 +1,155 @@
 package com.eimt.usermanagement.config;
 
+import com.eimt.usermanagement.model.User;
+import com.eimt.usermanagement.repository.UserRepository;
 import com.eimt.usermanagement.service.UserService;
 import com.eimt.usermanagement.service.impl.UserServiceImpl;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.UserInfoTokenServices;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.oauth2.client.OAuth2ClientContext;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter;
+import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.context.request.RequestContextListener;
+import org.springframework.web.filter.CompositeFilter;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import javax.servlet.Filter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @EnableWebSecurity
 @Configuration
-public class SecurityConfiguration {
+@EnableWebMvc
+@EnableOAuth2Client
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    @Configuration
-    @Order(1)
-    public static class UserSecurity extends WebSecurityConfigurerAdapter {
+    private final OAuth2ClientContext oauth2ClientContext;
+    private final AuthenticationSuccessHandler authenticationSuccessHandler;
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
-        private final AuthenticationSuccessHandler successHandler;
-        private final AuthenticationFailureHandler failureHandler;
-        private final LogoutSuccessHandler logoutSuccessHandler;
-        private final AuthenticationEntryPoint authenticationEntryPoint;
-        private final UserServiceImpl userService;
-        private final PasswordEncoder passwordEncoder;
+    public SecurityConfiguration(@Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
+                                 AuthenticationSuccessHandler authenticationSuccessHandler,
+                                 UserRepository userRepository,
+                                 PasswordEncoder passwordEncoder,
+                                 UserService userService) {
+        this.oauth2ClientContext = oauth2ClientContext;
+        this.userService = userService;
+        this.authenticationSuccessHandler = authenticationSuccessHandler;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-        public UserSecurity(AuthenticationSuccessHandler successHandler, AuthenticationFailureHandler failureHandler, LogoutSuccessHandler logoutSuccessHandler, AuthenticationEntryPoint authenticationEntryPoint, UserServiceImpl userService, PasswordEncoder passwordEncoder) {
-            this.successHandler = successHandler;
-            this.failureHandler = failureHandler;
-            this.logoutSuccessHandler = logoutSuccessHandler;
-            this.authenticationEntryPoint = authenticationEntryPoint;
-            this.userService = userService;
-            this.passwordEncoder = passwordEncoder;
-        }
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        super.configure(auth);
+        auth.userDetailsService(userService).passwordEncoder(passwordEncoder);
+    }
 
-        @Override
-        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-            auth.userDetailsService(userService).passwordEncoder(passwordEncoder);
-        }
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable()
+                .httpBasic().disable()
+                .exceptionHandling();
 
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            http.csrf().disable()
-                    .httpBasic().disable()
-                    .exceptionHandling()
-                    .authenticationEntryPoint(authenticationEntryPoint);
-
-            http.formLogin()
-                    .loginPage("/login.html")
-                    .successHandler(successHandler)
-                    .failureHandler(failureHandler)
-                    .and()
-                    .logout()
-                    .logoutSuccessUrl("/login.html");
-        }
-
+        http
+                .authorizeRequests()
+                .antMatchers("/register").permitAll()
+                .antMatchers("/registrationConfirm").permitAll()
+                .antMatchers("/login/**").permitAll()
+                .antMatchers("/forgotPassword").permitAll()
+                .antMatchers(HttpMethod.GET, "/employees").hasAnyAuthority("ADMIN", "MANAGER")
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .usernameParameter("email")
+                .passwordParameter("password")
+                .defaultSuccessUrl("/editProfile")
+                .failureUrl("/login?error")
+                .permitAll()
+                .and()
+                .logout()
+                .clearAuthentication(true)
+                .invalidateHttpSession(true)
+                .deleteCookies("remember-me")
+                .deleteCookies("JSESSIONID")
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login")
+                .permitAll()
+                .and()
+                .rememberMe()
+                .key("uniqueAndSecret")
+                .tokenValiditySeconds(86400)
+                .and()
+                .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
     }
 
     @Bean
-    public AuthenticationSuccessHandler getSuccessHandler() {
-        return (request, response, authentication) -> {
-            response.setStatus(HttpStatus.OK.value());
-        };
+    public FilterRegistrationBean<OAuth2ClientContextFilter> oauth2ClientFilterRegistration(OAuth2ClientContextFilter filter) {
+        FilterRegistrationBean<OAuth2ClientContextFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(filter);
+        registration.setOrder(-100);
+        return registration;
     }
 
     @Bean
-    public AuthenticationFailureHandler failureHandler() {
-        return (request, response, exception) -> {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-        };
+    @ConfigurationProperties("github")
+    public ClientResources github() {
+        return new ClientResources();
     }
 
     @Bean
-    public LogoutSuccessHandler logoutSuccessHandler() {
-        return (request, response, authentication) ->
-                response.setStatus(HttpStatus.OK.value());
+    @ConfigurationProperties("facebook")
+    public ClientResources facebook() {
+        return new ClientResources();
     }
 
     @Bean
-    public AuthenticationEntryPoint authenticationEntryPoint() {
-        return new AuthenticationEntryPoint() {
-            /**
-             * Always returns a 401 error code to the client.
-             */
-            @Override
-            public void commence(HttpServletRequest request,
-                                 HttpServletResponse response,
-                                 AuthenticationException authenticationException) throws IOException,
-                    ServletException {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access Denied");
-            }
-        };
+    public RequestContextListener requestContextListener() {
+        return new RequestContextListener();
     }
 
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    private Filter ssoFilter() {
+        CompositeFilter compositeFilter = new CompositeFilter();
+        List<Filter> filters = new ArrayList<>();
+        filters.add(ssoFilter(facebook(), "/login/facebook"));
+        filters.add(ssoFilter(github(), "/login/github"));
+        compositeFilter.setFilters(filters);
+        return compositeFilter;
     }
+
+    private Filter ssoFilter(ClientResources client, String path) {
+        OAuth2ClientAuthenticationProcessingFilter oAuth2ClientAuthenticationFilter
+                = new OAuth2ClientAuthenticationProcessingFilter(path);
+        OAuth2RestTemplate oAuth2RestTemplate
+                = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
+        oAuth2ClientAuthenticationFilter.setRestTemplate(oAuth2RestTemplate);
+        UserInfoTokenServices tokenServices
+                = new UserInfoTokenServices(client.getResource().getUserInfoUri(), client.getResource().getClientId());
+        tokenServices.setRestTemplate(oAuth2RestTemplate);
+        oAuth2ClientAuthenticationFilter.setTokenServices(tokenServices);
+        oAuth2ClientAuthenticationFilter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
+        return oAuth2ClientAuthenticationFilter;
+    }
+
 }
+

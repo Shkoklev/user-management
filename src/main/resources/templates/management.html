@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+          integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
+          crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <title>Employees</title>
+</head>
+<body>
+
+<div class="container-fluid"
+     style="height: 50px; line-height: 50px; background-color: lightseagreen; margin-bottom: 20px">
+    <nav class="container clearfix">
+        <form class="float-right" action="#" th:action="@{/logout}" method="post" style="display: inline-block">
+            <button class="btn btn-sm" type="submit">Logout</button>
+        </form>
+        <div>
+            <span>Logged in: </span>
+            <span style="font-weight: bold;" th:text="${email}"></span>
+        </div>
+    </nav>
+</div>
+
+<div class="container">
+
+    <ul class="list-group">
+        <li th:each="e : ${employees}" class="list-group-item">
+            <span th:text="${e.firstName}"></span>
+            <span th:text="${e.lastName}"></span>
+            <br>
+            <span th:text="${e.email}"></span>
+            <br>
+            <small th:text="${e.role}"></small>
+            <form class="float-right" method="GET" th:action="@{|/employees/${e.email}/profile-edit|}">
+                <button class="btn btn-primary m-2" type="submit" name="submit" value="value">Edit</button>
+            </form>
+            <form class="float-right" th:action="@{|/employees/${e.email}|}" th:method="get">
+                <input type="hidden" name="_method" value="delete"/>
+                <button class="btn btn-danger m-2" type="submit" name="submit" value="value">Delete</button>
+            </form>
+        </li>
+    </ul>
+
+    <div class="pager">
+
+        <a th:if="${hasPrevPage}" th:href="@{/employees(page=${pageNumber-1},size=3)}">prev</a>
+
+        <a th:each="page:${#numbers.sequence(0,totalPages - 1)}"
+           th:text="${page}"
+           th:classappend="${page == pageNumber} ? active-page"
+           th:href="@{/employees(page=${page},size=3)}"
+           style="margin-right: 7px">
+        </a>
+
+        <a th:if="${hasNextPage}" th:href="@{/employees(page=${pageNumber+1},size=1)}">next</a>
+    </div>
+
+</div>
+
+
+</body>
+</html>

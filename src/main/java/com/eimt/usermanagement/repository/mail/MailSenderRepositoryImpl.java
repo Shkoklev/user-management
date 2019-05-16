@@ -19,7 +19,7 @@ public class MailSenderRepositoryImpl implements MailSenderRepository {
         SimpleMailMessage email = new SimpleMailMessage();
         email.setTo(to);
         email.setSubject(subject);
-        email.setText(message + " \n" + "http://localhost:8080" + confirmationUrl);
+        email.setText(message + " \n" + confirmationUrl);
         mailSender.send(email);
     }
 }

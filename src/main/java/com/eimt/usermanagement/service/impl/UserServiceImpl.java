@@ -4,25 +4,30 @@ import com.eimt.usermanagement.model.Role;
 import com.eimt.usermanagement.model.User;
 import com.eimt.usermanagement.model.VerificationToken;
 import com.eimt.usermanagement.model.dto.UserDto;
+import com.eimt.usermanagement.model.dto.UserEditObject;
 import com.eimt.usermanagement.model.exception.DuplicateUserException;
 import com.eimt.usermanagement.model.exception.InvalidTokenException;
 import com.eimt.usermanagement.model.exception.UserNotFoundException;
 import com.eimt.usermanagement.repository.UserRepository;
 import com.eimt.usermanagement.repository.VerificationTokenRepository;
 import com.eimt.usermanagement.service.UserService;
+import org.apache.commons.lang.RandomStringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.Optional;
 
 @Service
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final VerificationTokenRepository verificationTokenRepository;
@@ -36,9 +41,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     public User createUser(UserDto user) {
 
-        userRepository.findByEmail(user.getEmail()).ifPresent(it -> { throw new DuplicateUserException(
-                "User with an email: " + user.getEmail() + " already exists !"
-        ); });
+        userRepository.findByEmail(user.getEmail()).ifPresent(it -> {
+            throw new DuplicateUserException(
+                    "User with an email: " + user.getEmail() + " already exists !"
+            );
+        });
 
         final LocalDateTime registrationDate = LocalDateTime.now();
         final Role role = Role.USER;
@@ -63,7 +70,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Transactional
-    public void verifyUser(String activationCode) {
+    public void verifyAndActivateUser(String activationCode) {
         VerificationToken token = this.verificationTokenRepository.findByToken(activationCode)
                 .orElseThrow(() -> new InvalidTokenException("this code " + activationCode + " is invalid !"));
         User u = this.userRepository.findByEmail(token.getUser().getEmail())
@@ -73,7 +80,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Scheduled(cron = "0 17 * * * *")
-    public void deleteExpiredTokensAndUsers(){
+    public void deleteExpiredTokensAndUsers() {
         Calendar cal = Calendar.getInstance();
         verificationTokenRepository.findAll()
                 .stream()
@@ -85,28 +92,55 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 });
     }
 
-    public void emailActivationHasExpired(String email) {
-
+    public String generateNewPasswordForEmail(String email) {
+        User u = (User) this.getUser(email);
+        String password = RandomStringUtils.randomAlphanumeric(8);
+        u.changePassword(passwordEncoder.encode(password));
+        userRepository.save(u);
+        return password;
     }
 
-    public void changePassword(String email, String password) {
-
+    @Transactional
+    public User editUser(User user, UserEditObject userEditObject) {
+        user.changeFirstName(userEditObject.getFirstName());
+        user.changeLastName(userEditObject.getLastName());
+        user.changeBirthDate(userEditObject.getBirthDate());
+        user.changeGender(userEditObject.getGender());
+        this.userRepository.save(user);
+        return user;
     }
 
-    public void activateUser(String token) {
-
+    public boolean isPasswordValid(User e, String password) {
+        return this.passwordEncoder.matches(password, e.getPassword());
     }
 
-    public void getUserDetails(String email) {
-
+    @Override
+    @Transactional
+    public void updatePassword(User u, String newPassword) {
+        u.changePassword(this.passwordEncoder.encode(newPassword));
+        userRepository.save(u);
     }
 
-    public void changeFirstName(String email, String newFirstName) {
-
+    @Override
+    public User createUser(User user) {
+        return this.userRepository.save(user);
     }
 
-    public void changeLastName(String email, String newLastName) {
+    @Override
+    public Page<User> getUsers(Pageable pageable) {
+        return this.userRepository.findAll(pageable);
+    }
 
+    @Override
+    public User getUser(String email) {
+        return this.userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserByEmail(String email) {
+        this.userRepository.deleteByEmail(email);
     }
 
     @Override

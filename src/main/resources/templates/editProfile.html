@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+          integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
+          crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <title>Edit profile</title>
+</head>
+<body>
+<div class="container-fluid"
+     style="height: 50px; line-height: 50px; background-color: lightseagreen; margin-bottom: 20px">
+    <nav class="container clearfix">
+        <form class="float-right" action="#" th:action="@{/logout}" method="post" style="display: inline-block">
+            <button class="btn btn-default" type="submit">Logout</button>
+        </form>
+        <div>
+            <span>Logged in: </span>
+            <span style="font-weight: bold;" th:text="${email}"></span>
+        </div>
+    </nav>
+</div>
+
+<div class="container">
+    <h2 class="text-center">Edit Profile</h2>
+    <hr>
+    <form th:action="@{/editProfile}" th:object="${user}" method="POST" enctype="utf8">
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label for="input-first-name">First name: <span style="font-weight: bold"
+                                                                    th:text="${user.firstName}"></span></label>
+                    <input type="text" th:value="*{firstName}" th:field="*{firstName}" class="form-control"
+                           id="input-first-name"
+                           placeholder="Enter first name">
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label for="input-last-name">Last name: <span style="font-weight: bold"
+                                                                  th:text="${user.lastName}"></span></label>
+                    <input type="text" th:value="*{lastName}" th:field="*{lastName}" class="form-control"
+                           id="input-last-name"
+                           placeholder="Enter last name">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label for="input-birth-date">Birth date: <span style="font-weight: bold"
+                                                                    th:text="${user.birthDate}"></span></label>
+                    <input type="date" th:value="*{birthDate}" th:field="*{birthDate}" class="form-control"
+                           id="input-birth-date">
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <label for="input-gender">Gender: <span style="font-weight: bold"
+                                                        th:text="${user.gender}"></span></label>
+                <select id="input-gender" th:value="*{gender}" th:field="*{gender}" class="form-control">
+                    <option value="" disabled="disabled" selected>Choose gender...</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <a class="btn btn-lg btn-primary" href="changePassword">Change Password</a>
+            </div>
+            <div class="col-md-1 offset-md-5">
+                <button type="submit" class="btn btn-lg btn-success">Save</button>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+</html>

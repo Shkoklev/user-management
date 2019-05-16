@@ -15,7 +15,8 @@ public class Department {
     @JoinColumn(name = "manager_id")
     private User manager;
 
-    public Department(){}
+    public Department() {
+    }
 
     public Department(String name, User manager) {
         this.name = name;

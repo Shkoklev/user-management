@@ -9,16 +9,17 @@
     <title>RegistrationConfirm</title>
 </head>
 <body>
-<div class="container">
+<div class="container mt-2">
     <h2>Enter the code from the email to active your account</h2>
     <form th:action="@{/registrationConfirm}" method="post">
         <div class="form-group">
             <div th:if="${param.error}" class="alert alert-danger">
                 Invalid activation code
             </div>
-            <input type="text" name="token" class="form-control" id="input-activation-code" placeholder="Enter activation code">
+            <input type="text" name="token" class="form-control" id="input-activation-code"
+                   placeholder="Enter activation code">
         </div>
-        <button type="submit" class="btn btn-block btn-success">Activate your account</button>
+        <button type="submit" class="btn btn-success">Activate your account</button>
     </form>
 </div>
 </body>

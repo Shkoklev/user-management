@@ -37,7 +37,8 @@ public class UserDto {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
-    public UserDto() {}
+    public UserDto() {
+    }
 
     public UserDto(String email, String password, String verifiedPassword, String firstName,
                    String lastName, String gender, LocalDate birthDate) {

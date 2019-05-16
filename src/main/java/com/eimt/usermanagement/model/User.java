@@ -15,6 +15,9 @@ import java.util.Collections;
 public class User implements UserDetails {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+
     private String email;
 
     private String password;
@@ -37,7 +40,8 @@ public class User implements UserDetails {
     @JoinColumn(name = "department_id")
     private Department department;
 
-    public User(){}
+    public User() {
+    }
 
     public User(String email,
                 String password,
@@ -60,17 +64,17 @@ public class User implements UserDetails {
         this.enabled = false;
     }
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(new SimpleGrantedAuthority(this.role.toString()));
+    }
+
     public String getEmail() {
         return email;
     }
 
     public void changeEmail(String email) {
         this.email = email;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(this.role.toString()));
     }
 
     public String getPassword() {
@@ -102,6 +106,7 @@ public class User implements UserDetails {
         return true;
     }
 
+
     public void changePassword(String password) {
         this.password = password;
     }
@@ -130,7 +135,7 @@ public class User implements UserDetails {
         this.gender = gender;
     }
 
-    public LocalDate changeBirthDate() {
+    public LocalDate getBirthDate() {
         return birthDate;
     }
 
@@ -170,4 +175,15 @@ public class User implements UserDetails {
         this.enabled = true;
     }
 
+    public String toString() {
+        return firstName + " " + lastName;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }

@@ -3,23 +3,36 @@ package com.eimt.usermanagement.service;
 import com.eimt.usermanagement.model.User;
 import com.eimt.usermanagement.model.VerificationToken;
 import com.eimt.usermanagement.model.dto.UserDto;
+import com.eimt.usermanagement.model.dto.UserEditObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
-public interface UserService {
+import java.util.Optional;
+
+
+public interface UserService extends UserDetailsService {
 
     User createUser(UserDto employee);
 
     VerificationToken createVerificationToken(User newUser);
 
-    void emailActivationHasExpired(String email);
+    String generateNewPasswordForEmail(String email);
 
-    void changePassword(String email, String password);
+    User editUser(User employee, UserEditObject employeeEditObject);
 
-    void verifyUser(String token);
+    Page<User> getUsers(Pageable pageable);
 
-    void getUserDetails(String email);
+    User getUser(String email);
 
-    void changeFirstName(String email, String newFirstName);
+    User createUser(User user);
 
-    void changeLastName(String email, String newLastName);
+    void deleteUserByEmail(String email);
+
+    void verifyAndActivateUser(String token);
+
+    boolean isPasswordValid(User e, String password);
+
+    void updatePassword(User e, String newPassword);
 
 }
