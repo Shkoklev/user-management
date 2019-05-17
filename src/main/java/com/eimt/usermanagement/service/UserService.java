@@ -25,6 +25,8 @@ public interface UserService extends UserDetailsService {
 
     User getUser(String email);
 
+    void activateUser(User user);
+
     User createUser(User user);
 
     void deleteUserByEmail(String email);

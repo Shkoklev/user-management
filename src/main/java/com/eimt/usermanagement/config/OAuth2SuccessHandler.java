@@ -52,8 +52,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                             Role.EMPLOYEE,
                             null
                     ));
-                    u.activate();
                     this.ssoIdentityService.createSsoIdentity(ssoId,u);
+                    this.userService.activateUser(u);
                     return u;
                 });
         response.sendRedirect("http://localhost:8080/me");

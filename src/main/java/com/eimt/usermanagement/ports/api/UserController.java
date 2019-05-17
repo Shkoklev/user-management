@@ -8,6 +8,7 @@ import com.eimt.usermanagement.model.exception.DuplicateUserException;
 import com.eimt.usermanagement.model.exception.UserNotFoundException;
 import com.eimt.usermanagement.repository.mail.MailSenderRepository;
 import com.eimt.usermanagement.service.DepartmentService;
+import com.eimt.usermanagement.service.SsoIdentityService;
 import com.eimt.usermanagement.service.UserService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -43,12 +44,16 @@ public class UserController {
 
     MailSenderRepository mailSenderRepository;
 
+    SsoIdentityService ssoIdentityService;
+
     public UserController(UserService userService, ApplicationEventPublisher applicationEventPublisher,
-                          MailSenderRepository mailSenderRepository, DepartmentService departmentService) {
+                          MailSenderRepository mailSenderRepository, DepartmentService departmentService,
+                          SsoIdentityService ssoIdentityService) {
         this.userService = userService;
         this.eventPublisher = applicationEventPublisher;
         this.mailSenderRepository = mailSenderRepository;
         this.departmentService = departmentService;
+        this.ssoIdentityService = ssoIdentityService;
 
     }
 
@@ -126,7 +131,7 @@ public class UserController {
     @GetMapping(value = "editProfile")
     public String showEditProfilePage(Model model) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User u = this.userService.getUser(username);
+        User u = (User) this.userService.loadUserByUsername(username);
         UserEditObject userEditObject
                 = new UserEditObject(u.getFirstName(), u.getLastName(), u.getBirthDate(), u.getGender());
         model.addAttribute("email", getActiveUser().getEmail());
